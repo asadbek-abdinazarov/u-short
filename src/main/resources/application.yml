@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: prod
   application:
     name: u-short
   jpa:
@@ -15,7 +15,3 @@ spring:
     cache: false
     prefix: classpath:/templates/
     suffix: .html
-app:
-  base-url: http://localhost:8080
-server:
-  port: 8080
