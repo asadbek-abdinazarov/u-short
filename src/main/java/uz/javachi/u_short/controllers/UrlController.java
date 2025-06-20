@@ -2,6 +2,7 @@ package uz.javachi.u_short.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,8 @@ import java.util.concurrent.ExecutionException;
 @Controller
 @RequiredArgsConstructor
 public class UrlController {
+    @Value("${app.base-url}")
+    private String baseUrl;
     private final UrlService urlService;
 
     @GetMapping("/")
@@ -30,7 +33,7 @@ public class UrlController {
     public String shorten(@ModelAttribute @Valid UrlRequest urlRequest, Model model) throws ExecutionException, InterruptedException {
         CompletableFuture<String> stringCompletableFuture = urlService.shortenUrl(urlRequest.getOriginalUrl());
         String shortCode = stringCompletableFuture.get();
-        model.addAttribute("shortUrl", "http://localhost:8080/c/" + shortCode);
+        model.addAttribute("shortUrl", baseUrl + "/c/" + shortCode);
         return "index";
     }
 

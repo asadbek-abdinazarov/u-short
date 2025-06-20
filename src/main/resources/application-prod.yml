@@ -32,5 +32,5 @@ server:
   port: ${PORT:8080}
 
 app:
-  base-url: ${APP_BASE_URL:https://u-short.up.railway.app}
+  base-url: ${APP_BASE_URL:https://u-short-production.up.railway.app/}
 
