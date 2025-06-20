@@ -1,0 +1,1295 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manabu URL Shortener</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            /* 60-30-10 Color Principle - Light Mode */
+            --primary-60: #f8fafc;
+            --secondary-30: #ffffff;
+            --accent-10: #ff6b6b;
+
+            /* Supporting colors with better contrast */
+            --text-primary: #1a202c;
+            --text-secondary: #2d3748;
+            --text-muted: #4a5568;
+
+            /* Happy accent colors */
+            --accent-coral: #e53e3e;
+            --accent-turquoise: #319795;
+            --accent-yellow: #d69e2e;
+            --accent-pink: #d53f8c;
+            --accent-blue: #3182ce;
+
+            /* Glow effects */
+            --coral-glow: rgba(229, 62, 62, 0.3);
+            --turquoise-glow: rgba(49, 151, 149, 0.3);
+            --yellow-glow: rgba(214, 158, 46, 0.3);
+            --pink-glow: rgba(213, 63, 140, 0.3);
+        }
+
+        [data-theme="dark"] {
+            /* 60-30-10 Color Principle - Dark Mode */
+            --primary-60: #0f172a;
+            --secondary-30: #1e293b;
+            --accent-10: #ff6b6b;
+
+            /* Supporting colors */
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+
+            /* Brighter accent colors for dark mode */
+            --accent-coral: #ff6b6b;
+            --accent-turquoise: #4ecdc4;
+            --accent-yellow: #feca57;
+            --accent-pink: #ff9ff3;
+            --accent-blue: #45b7d1;
+
+            /* Enhanced glow effects for dark mode */
+            --coral-glow: rgba(255, 107, 107, 0.4);
+            --turquoise-glow: rgba(78, 205, 196, 0.4);
+            --yellow-glow: rgba(254, 202, 87, 0.4);
+            --pink-glow: rgba(255, 159, 243, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--primary-60);
+            background-image:
+                    radial-gradient(circle at 20% 30%, var(--coral-glow) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 20%, var(--turquoise-glow) 0%, transparent 50%),
+                    radial-gradient(circle at 40% 80%, var(--yellow-glow) 0%, transparent 50%),
+                    radial-gradient(circle at 90% 90%, var(--pink-glow) 0%, transparent 50%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .controls-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .theme-toggle, .language-selector {
+            background: var(--secondary-30);
+            border: 2px solid var(--accent-coral);
+            border-radius: 50px;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px var(--coral-glow);
+        }
+
+        .language-selector {
+            border-color: var(--accent-blue);
+            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+            position: relative;
+        }
+
+        .language-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(49, 130, 206, 0.4);
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .language-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background: #ffffff !important;
+            border: 2px solid var(--accent-blue);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            min-width: 160px;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+        }
+
+        [data-theme="dark"] .language-dropdown {
+            background: #1e293b !important;
+            border-color: var(--accent-blue);
+        }
+
+        .language-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .language-option {
+            padding: 12px 16px !important;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #1a202c !important;
+            background: #ffffff !important;
+            font-weight: 500;
+            border: none !important;
+            outline: none !important;
+        }
+
+        [data-theme="dark"] .language-option {
+            color: #f1f5f9 !important;
+            background: #1e293b !important;
+        }
+
+        .language-option:hover {
+            background: var(--accent-blue) !important;
+            color: #ffffff !important;
+        }
+
+        .language-option:first-child {
+            border-radius: 10px 10px 0 0;
+        }
+
+        .language-option:last-child {
+            border-radius: 0 0 10px 10px;
+        }
+
+        .language-option.active {
+            background: rgba(49, 130, 206, 0.15) !important;
+            color: var(--accent-blue) !important;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .language-option.active {
+            background: rgba(49, 130, 206, 0.25) !important;
+            color: var(--accent-blue) !important;
+        }
+
+        .language-option span {
+            color: inherit !important;
+            font-size: inherit !important;
+            display: inline-block !important;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--coral-glow);
+            background: var(--accent-coral);
+            color: white;
+        }
+
+        .theme-toggle i {
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle:hover i {
+            transform: rotate(180deg);
+        }
+
+        .container {
+            max-width: 640px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .main-card {
+            backdrop-filter: blur(20px);
+            background: var(--secondary-30);
+            border: 2px solid var(--accent-coral);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow:
+                    0 24px 48px rgba(0, 0, 0, 0.1),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            animation: cardFloat 8s ease-in-out infinite;
+            transition: all 0.3s ease;
+        }
+
+        .main-card::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg,
+            var(--accent-coral),
+            var(--accent-turquoise),
+            var(--accent-yellow),
+            var(--accent-pink),
+            var(--accent-blue));
+            border-radius: 27px;
+            z-index: -1;
+            opacity: 0.6;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        [data-theme="dark"] .main-card {
+            border: 2px solid rgba(255, 107, 107, 0.2);
+            box-shadow:
+                    0 24px 48px rgba(0, 0, 0, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.8; }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .logo-icon {
+            font-size: 3.5rem;
+            color: var(--accent-coral);
+            margin-bottom: 16px;
+            display: block;
+            animation: pulse 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px var(--coral-glow));
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] .logo-icon {
+            background: linear-gradient(45deg, var(--accent-coral), var(--accent-turquoise));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 20px var(--coral-glow));
+        }
+
+        .logo-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+            line-height: 1.2;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="dark"] .logo-title {
+            background: linear-gradient(45deg, var(--accent-coral), var(--accent-turquoise));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        .logo-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 20px 24px;
+            font-size: 1rem;
+            font-weight: 400;
+            border: 2px solid rgba(78, 205, 196, 0.3);
+            border-radius: 16px;
+            background: var(--primary-60);
+            color: var(--text-primary);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.5;
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-turquoise);
+            background: var(--primary-60);
+            box-shadow:
+                    0 0 0 4px var(--turquoise-glow),
+                    0 8px 24px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 20px 24px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--accent-coral), var(--accent-yellow));
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: none;
+            letter-spacing: 0.02em;
+            line-height: 1.5;
+            box-shadow: 0 8px 24px var(--coral-glow);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .submit-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px var(--coral-glow), 0 4px 12px var(--yellow-glow);
+            background: linear-gradient(135deg, #ff5252, #ffc107);
+        }
+
+        .submit-button:hover::before {
+            left: 100%;
+        }
+
+        .submit-button:active {
+            transform: translateY(-1px);
+        }
+
+        .submit-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert-section {
+            margin-top: 32px;
+        }
+
+        .alert-box {
+            border: none;
+            border-radius: 16px;
+            padding: 24px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            line-height: 1.6;
+            background: var(--primary-60);
+            transition: all 0.3s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            border: 2px solid var(--accent-turquoise);
+            color: var(--text-primary);
+        }
+
+        .alert-danger {
+            border: 2px solid var(--accent-coral);
+            color: var(--text-primary);
+        }
+
+        .success-content {
+            text-align: center;
+        }
+
+        .success-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--accent-turquoise);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .url-result {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .short-url {
+            display: inline-block;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--accent-turquoise), var(--accent-blue));
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            word-break: break-all;
+            max-width: 100%;
+            text-align: center;
+            box-shadow: 0 6px 20px var(--turquoise-glow);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .short-url:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px var(--turquoise-glow), 0 4px 12px var(--pink-glow);
+            color: white;
+            text-decoration: none;
+            background: linear-gradient(135deg, #3dd5c7, #2fa8d1);
+        }
+
+        .copy-button {
+            padding: 12px 20px;
+            background: var(--primary-60);
+            border: 2px solid var(--accent-pink);
+            color: var(--accent-pink);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .copy-button:hover {
+            background: var(--accent-pink);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px var(--pink-glow);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .error-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .error-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.5;
+        }
+
+        .error-icon {
+            font-size: 1.1rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+            color: var(--accent-coral);
+        }
+
+        .error-content {
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .error-field {
+            font-weight: 600;
+            margin-right: 4px;
+            color: var(--text-primary);
+        }
+
+        /* Floating particles */
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        .particle:nth-child(1) { background: var(--accent-coral); }
+        .particle:nth-child(2) { background: var(--accent-turquoise); }
+        .particle:nth-child(3) { background: var(--accent-yellow); }
+        .particle:nth-child(4) { background: var(--accent-pink); }
+        .particle:nth-child(5) { background: var(--accent-blue); }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .warning-card {
+            background: var(--secondary-30);
+            border: 2px solid var(--accent-yellow);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            box-shadow: 0 4px 12px var(--yellow-glow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideInDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .warning-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--yellow-glow);
+        }
+
+        .warning-card.collapsed {
+            padding: 16px 24px;
+            cursor: pointer;
+        }
+
+        .warning-card.collapsed:hover {
+            background: rgba(254, 202, 87, 0.05);
+        }
+
+        .warning-icon {
+            font-size: 1.5rem;
+            color: var(--accent-yellow);
+            margin-top: 2px;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+        }
+
+        .warning-card.collapsed .warning-icon {
+            transform: scale(0.9);
+        }
+
+        .warning-content {
+            flex: 1.2;
+            transition: all 0.4s ease;
+            max-width: none;
+        }
+
+        .warning-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: margin-bottom 0.4s ease;
+        }
+
+        .warning-card.collapsed .warning-title {
+            margin-bottom: 0;
+        }
+
+        .warning-text {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 0.95rem;
+            max-height: 180px;
+            opacity: 1;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(0);
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .warning-text::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .warning-text::-webkit-scrollbar-track {
+            background: rgba(254, 202, 87, 0.1);
+            border-radius: 3px;
+        }
+
+        .warning-text::-webkit-scrollbar-thumb {
+            background: var(--accent-yellow);
+            border-radius: 3px;
+        }
+
+        .warning-text::-webkit-scrollbar-thumb:hover {
+            background: #c69500;
+        }
+
+        .warning-card.collapsed .warning-text {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+            transform: translateY(-10px);
+        }
+
+        .warning-text ul {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+
+        .warning-text li {
+            margin-bottom: 8px;
+        }
+
+        .warning-toggle {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+        }
+
+        .warning-toggle:hover {
+            color: var(--accent-yellow);
+            background: rgba(254, 202, 87, 0.1);
+            transform: scale(1.1);
+        }
+
+        .warning-toggle i {
+            transition: transform 0.3s ease;
+        }
+
+        .warning-card.collapsed .warning-toggle i {
+            transform: rotate(180deg);
+        }
+
+        .warning-card.collapsed .warning-title::after {
+            content: " (click to expand)";
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            opacity: 0.7;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .controls-container {
+                top: 15px;
+                right: 15px;
+                flex-direction: row;
+                gap: 6px;
+            }
+
+            .theme-toggle, .language-selector {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .theme-toggle span, .language-selector span {
+                display: none;
+            }
+
+            .theme-toggle i, .language-selector i {
+                margin: 0;
+            }
+
+            .language-dropdown {
+                min-width: 150px !important;
+                right: -10px;
+                font-size: 0.9rem;
+                background: #ffffff !important;
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+            }
+
+            [data-theme="dark"] .language-dropdown {
+                background: #1e293b !important;
+            }
+
+            .language-option {
+                padding: 14px 16px !important;
+                font-size: 0.9rem !important;
+                color: #1a202c !important;
+                background: #ffffff !important;
+                font-weight: 500 !important;
+            }
+
+            [data-theme="dark"] .language-option {
+                color: #f1f5f9 !important;
+                background: #1e293b !important;
+            }
+
+            .language-option:hover {
+                background: var(--accent-blue) !important;
+                color: #ffffff !important;
+            }
+
+            .language-option span {
+                color: inherit !important;
+                font-size: 0.9rem !important;
+                font-weight: inherit !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .language-dropdown {
+                min-width: 140px !important;
+                right: -5px;
+                font-size: 0.85rem;
+                background: #ffffff !important;
+            }
+
+            [data-theme="dark"] .language-dropdown {
+                background: #1e293b !important;
+            }
+
+            .language-option {
+                padding: 12px 14px !important;
+                font-size: 0.85rem !important;
+                color: #1a202c !important;
+                background: #ffffff !important;
+            }
+
+            [data-theme="dark"] .language-option {
+                color: #f1f5f9 !important;
+                background: #1e293b !important;
+            }
+
+            .language-option span {
+                font-size: 0.85rem !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="controls-container">
+    <div class="language-selector" onclick="toggleLanguageDropdown()">
+        <i class="fas fa-globe"></i>
+        <span id="current-language">EN</span>
+        <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+        <div class="language-dropdown" id="languageDropdown">
+            <div class="language-option active" onclick="changeLanguage('en')">
+                <span>🇺🇸</span>
+                <span>English</span>
+            </div>
+            <div class="language-option" onclick="changeLanguage('uz')">
+                <span>🇺🇿</span>
+                <span>O'zbek</span>
+            </div>
+            <div class="language-option" onclick="changeLanguage('ru')">
+                <span>🇷🇺</span>
+                <span>Русский</span>
+            </div>
+        </div>
+    </div>
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <i class="fas fa-moon" id="theme-icon"></i>
+        <span id="theme-text" data-key="darkMode">Dark Mode</span>
+    </div>
+</div>
+
+<div class="floating-particles"></div>
+
+<div class="container">
+    <div class="main-card">
+        <header class="logo-section">
+            <i class="fas fa-link logo-icon"></i>
+            <h1 class="logo-title">U-SHORT</h1>
+            <p class="logo-subtitle" data-key="subtitle">Premium URL Shortener now Free</p>
+        </header>
+
+        <div class="warning-card" id="warningCard" onclick="handleWarningClick(event)">
+            <i class="fas fa-exclamation-triangle warning-icon"></i>
+            <div class="warning-content">
+                <div class="warning-title">
+                    <span data-key="warningTitle">Important Notice</span>
+                </div>
+                <div class="warning-text" data-key="warningText">
+                    Please ensure that any URLs shortened through our service are safe, lawful, and used responsibly.
+                    Once created, shortened URLs are permanent and cannot be modified.
+
+                    We do not support or condone any form of hacking, phishing, fraud, or other malicious or illegal
+                    activities. Any user found abusing this service for such purposes will have their information
+                    reported to the relevant authorities.
+
+                    By using this service, you agree that:
+
+                    <ul>
+                        <li>You are solely responsible for the content and destination of the URLs you shorten.</li>
+                        <li>Our service is provided "as is" with no guarantees or warranties.</li>
+                        <li>We shall not be held liable for any misuse or damage caused by URLs created through this
+                            platform.
+                        </li>
+                    </ul>
+                    <b>Use at your own risk. Be cautious and respectful of laws and community standards.</b>
+                </div>
+            </div>
+            <button class="warning-toggle" onclick="toggleWarning(event)" title="Collapse/Expand">
+                <i class="fas fa-chevron-up"></i>
+            </button>
+        </div>
+
+        <main class="form-section">
+            <form th:action="@{/shorten}" th:object="${urlRequest}" method="post">
+                <div class="input-wrapper">
+                    <input type="url"
+                           class="form-input"
+                           th:field="*{originalUrl}"
+                           data-key="placeholder"
+                           placeholder="🌐 Enter your long URL here..."
+                           required
+                           autocomplete="url"
+                           spellcheck="false"/>
+                </div>
+                <button type="submit" class="submit-button">
+                    <i class="fas fa-magic"></i> <span data-key="createButton">Create Short URL</span>
+                </button>
+            </form>
+        </main>
+
+        <div class="alert-section">
+            <div th:if="${errors != null}" class="error-list">
+                <div th:each="error : ${errors}" class="alert-box alert-danger">
+                    <div class="error-item">
+                        <i class="fas fa-exclamation-triangle error-icon"></i>
+                        <div class="error-content">
+                            <span class="error-field" th:text="${error.field}"></span>
+                            <span th:text="${error.message}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${errors == null and shortUrl != null}" class="alert-box alert-success">
+                <div class="success-content">
+                    <div class="success-title">
+                        <i class="fas fa-check-circle"></i>
+                        <span data-key="successTitle">Your short URL is ready!</span>
+                    </div>
+                    <div class="url-result">
+                        <a th:href="${shortUrl}"
+                           th:text="${shortUrl}"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           class="short-url"></a>
+                        <button type="button" class="copy-button" onclick="copyToClipboard()">
+                            <i class="fas fa-copy"></i> <span data-key="copyButton">Copy Link</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Language translations
+    const translations = {
+        en: {
+            darkMode: "Dark Mode",
+            lightMode: "Light Mode",
+            subtitle: "Premium URL Shortener now Free",
+            warningTitle: "Important Notice",
+            warningText: `Please ensure that any URLs shortened through our service are safe, lawful, and used responsibly.
+                Once created, shortened URLs are permanent and cannot be modified.
+
+                We do not support or condone any form of hacking, phishing, fraud, or other malicious or illegal
+                activities. Any user found abusing this service for such purposes will have their information
+                reported to the relevant authorities.
+
+                By using this service, you agree that:
+
+                <ul>
+                    <li>You are solely responsible for the content and destination of the URLs you shorten.</li>
+                    <li>Our service is provided "as is" with no guarantees or warranties.</li>
+                    <li>We shall not be held liable for any misuse or damage caused by URLs created through this
+                        platform.
+                    </li>
+                </ul>
+                <b>Use at your own risk. Be cautious and respectful of laws and community standards.</b>`,
+            placeholder: "🌐 Enter your long URL here...",
+            createButton: "Create Short URL",
+            successTitle: "Your short URL is ready!",
+            copyButton: "Copy Link",
+            copied: "Copied!",
+            creating: "Creating..."
+        },
+        uz: {
+            darkMode: "Qorong'u rejim",
+            lightMode: "Yorug' rejim",
+            subtitle: "Premium URL qisqartiruvchi endi bepul",
+            warningTitle: "Muhim xabar",
+            warningText: `Iltimos, xizmatimiz orqali qisqartirilgan barcha URL manzillar xavfsiz, qonuniy va mas'uliyat bilan ishlatilishini ta'minlang.
+                Yaratilgandan so'ng, qisqartirilgan URL manzillar doimiy bo'lib, o'zgartirib bo'lmaydi.
+
+                Biz hech qanday xakerlik, fishing, firibgarlik yoki boshqa zararli yoki noqonuniy
+                faoliyatni qo'llab-quvvatlamaymiz va ma'qullamaymiz. Bunday maqsadlarda xizmatni suiiste'mol qilgan har qanday foydalanuvchi haqidagi ma'lumotlar
+                tegishli organlarga xabar qilinadi.
+
+                Ushbu xizmatdan foydalanish orqali siz quyidagilarni tan olasiz:
+
+                <ul>
+                    <li>Siz qisqartirgan URL manzillarning mazmuni va manzili uchun to'liq javobgarsiz.</li>
+                    <li>Bizning xizmatimiz hech qanday kafolat va kafolatlarsiz "bor holatida" taqdim etiladi.</li>
+                    <li>Ushbu platforma orqali yaratilgan URL manzillarning noto'g'ri ishlatilishi yoki zarar yetkazishi uchun biz javobgar bo'lmaymiz.
+                    </li>
+                </ul>
+                <b>O'z xavf-xataringiz ostida foydalaning. Qonunlar va jamiyat me'yorlariga ehtiyotkor va hurmatli bo'ling.</b>`,
+            placeholder: "🌐 Uzun URL manzilingizni kiriting...",
+            createButton: "Qisqa URL yaratish",
+            successTitle: "Sizning qisqa URL manzilingiz tayyor!",
+            copyButton: "Havolani nusxalash",
+            copied: "Nusxalandi!",
+            creating: "Yaratilmoqda..."
+        },
+        ru: {
+            darkMode: "Тёмный режим",
+            lightMode: "Светлый режим",
+            subtitle: "Премиум сокращатель URL теперь бесплатно",
+            warningTitle: "Важное уведомление",
+            warningText: `Пожалуйста, убедитесь, что все URL-адреса, сокращённые через наш сервис, безопасны, законны и используются ответственно.
+                После создания сокращённые URL-адреса являются постоянными и не могут быть изменены.
+
+                Мы не поддерживаем и не одобряем любые формы взлома, фишинга, мошенничества или других вредоносных или незаконных
+                действий. Любой пользователь, злоупотребляющий этим сервисом для таких целей, будет иметь свою информацию
+                переданную соответствующим органам.
+
+                Используя этот сервис, вы соглашаетесь с тем, что:
+
+                <ul>
+                    <li>Вы несёте полную ответственность за содержание и назначение сокращаемых URL-адресов.</li>
+                    <li>Наш сервис предоставляется "как есть" без каких-либо гарантий или поручительств.</li>
+                    <li>Мы не несём ответственности за любое неправильное использование или ущерб, причинённый URL-адресами, созданными через эту
+                        платформу.
+                    </li>
+                </ul>
+                <b>Используйте на свой страх и риск. Будьте осторожны и уважительны к законам и общественным стандартам.</b>`,
+            placeholder: "🌐 Введите ваш длинный URL здесь...",
+            createButton: "Создать короткий URL",
+            successTitle: "Ваш короткий URL готов!",
+            copyButton: "Копировать ссылку",
+            copied: "Скопировано!",
+            creating: "Создание..."
+        }
+    };
+
+    let currentLanguage = 'en';
+
+    function changeLanguage(lang) {
+        currentLanguage = lang;
+        localStorage.setItem('language', lang);
+
+        // Update current language display
+        const langCodes = { en: 'EN', uz: 'UZ', ru: 'RU' };
+        document.getElementById('current-language').textContent = langCodes[lang];
+
+        // Update active language option
+        document.querySelectorAll('.language-option').forEach(option => {
+            option.classList.remove('active');
+        });
+
+        // Find the correct option to mark as active
+        const clickedOption = document.querySelector(`[onclick="changeLanguage('${lang}')"]`);
+        if (clickedOption) {
+            clickedOption.classList.add('active');
+        }
+
+        // Update all translatable elements
+        updateTranslations();
+
+        // Close dropdown
+        document.getElementById('languageDropdown').classList.remove('show');
+    }
+
+    function updateTranslations() {
+        const elements = document.querySelectorAll('[data-key]');
+        elements.forEach(element => {
+            const key = element.getAttribute('data-key');
+            if (translations[currentLanguage][key]) {
+                if (element.tagName === 'INPUT') {
+                    element.placeholder = translations[currentLanguage][key];
+                } else {
+                    element.innerHTML = translations[currentLanguage][key];
+                }
+            }
+        });
+    }
+
+    function toggleLanguageDropdown() {
+        const dropdown = document.getElementById('languageDropdown');
+        dropdown.classList.toggle('show');
+    }
+
+    function loadLanguage() {
+        const savedLanguage = localStorage.getItem('language') || 'en';
+        currentLanguage = savedLanguage;
+
+        // Update current language display
+        const langCodes = { en: 'EN', uz: 'UZ', ru: 'RU' };
+        document.getElementById('current-language').textContent = langCodes[savedLanguage];
+
+        // Update active language option
+        document.querySelectorAll('.language-option').forEach(option => {
+            option.classList.remove('active');
+        });
+
+        const activeOption = document.querySelector(`[onclick="changeLanguage('${savedLanguage}')"]`);
+        if (activeOption) {
+            activeOption.classList.add('active');
+        }
+
+        // Update translations
+        updateTranslations();
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        const languageSelector = document.querySelector('.language-selector');
+        const dropdown = document.getElementById('languageDropdown');
+
+        if (!languageSelector.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    function toggleTheme() {
+        const body = document.body;
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+
+        if (body.getAttribute('data-theme') === 'dark') {
+            body.removeAttribute('data-theme');
+            themeIcon.className = 'fas fa-moon';
+            themeText.textContent = translations[currentLanguage].darkMode;
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.setAttribute('data-theme', 'dark');
+            themeIcon.className = 'fas fa-sun';
+            themeText.textContent = translations[currentLanguage].lightMode;
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+    function loadTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const body = document.body;
+        const themeIcon = document.getElementById('theme-icon');
+        const themeText = document.getElementById('theme-text');
+
+        if (savedTheme === 'dark') {
+            body.setAttribute('data-theme', 'dark');
+            themeIcon.className = 'fas fa-sun';
+            themeText.textContent = translations[currentLanguage].lightMode;
+        } else {
+            body.removeAttribute('data-theme');
+            themeIcon.className = 'fas fa-moon';
+            themeText.textContent = translations[currentLanguage].darkMode;
+        }
+    }
+
+    function createParticles() {
+        const particlesContainer = document.querySelector('.floating-particles');
+        const particleCount = 100;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (Math.random() * 15 + 15) + 's';
+            particlesContainer.appendChild(particle);
+        }
+    }
+
+    function copyToClipboard() {
+        const shortUrl = document.querySelector('.short-url');
+        if (!shortUrl) return;
+
+        const url = shortUrl.textContent;
+        navigator.clipboard.writeText(url).then(() => {
+            const btn = document.querySelector('.copy-button span');
+            const originalContent = btn.textContent;
+
+            btn.textContent = translations[currentLanguage].copied;
+            btn.parentElement.style.background = 'var(--accent-turquoise)';
+            btn.parentElement.style.color = 'white';
+            btn.parentElement.style.borderColor = 'var(--accent-turquoise)';
+
+            setTimeout(() => {
+                btn.textContent = originalContent;
+                btn.parentElement.style.background = 'var(--primary-60)';
+                btn.parentElement.style.color = 'var(--accent-pink)';
+                btn.parentElement.style.borderColor = 'var(--accent-pink)';
+            }, 2500);
+        }).catch(() => {
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+
+            const btn = document.querySelector('.copy-button span');
+            const originalContent = btn.textContent;
+            btn.textContent = translations[currentLanguage].copied;
+            setTimeout(() => {
+                btn.textContent = originalContent;
+            }, 2500);
+        });
+    }
+
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const btn = document.querySelector('.submit-button span');
+        const submitButton = document.querySelector('.submit-button');
+        btn.textContent = translations[currentLanguage].creating;
+        submitButton.disabled = true;
+    });
+
+    function toggleWarning(event) {
+        event.stopPropagation();
+        const warningCard = document.getElementById('warningCard');
+        const isCollapsed = warningCard.classList.contains('collapsed');
+
+        if (isCollapsed) {
+            warningCard.classList.remove('collapsed');
+            localStorage.setItem('warningState', 'expanded');
+        } else {
+            warningCard.classList.add('collapsed');
+            localStorage.setItem('warningState', 'collapsed');
+        }
+    }
+
+    function handleWarningClick(event) {
+        const warningCard = document.getElementById('warningCard');
+        if (warningCard.classList.contains('collapsed')) {
+            warningCard.classList.remove('collapsed');
+            localStorage.setItem('warningState', 'expanded');
+        }
+    }
+
+    function loadWarningState() {
+        const savedState = localStorage.getItem('warningState');
+        const warningCard = document.getElementById('warningCard');
+
+        if (savedState === 'collapsed') {
+            warningCard.classList.add('collapsed');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        loadLanguage();  // Load language first
+        loadTheme();     // Then load theme with correct language
+        loadWarningState();
+        createParticles();
+
+        const input = document.querySelector('.form-input');
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'translateY(-2px)';
+        });
+
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'translateY(0)';
+        });
+
+        // Auto-close warning card when user starts typing
+        input.addEventListener('input', function() {
+            const warningCard = document.getElementById('warningCard');
+            if (!warningCard.classList.contains('collapsed')) {
+                warningCard.classList.add('collapsed');
+                localStorage.setItem('warningState', 'collapsed');
+            }
+        });
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        const card = document.querySelector('.main-card');
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+
+        const deltaX = (x - centerX) / centerX;
+        const deltaY = (y - centerY) / centerY;
+
+        card.style.transform = `perspective(1000px) rotateY(${deltaX * 3}deg) rotateX(${-deltaY * 3}deg)`;
+    });
+
+    document.querySelector('.main-card').addEventListener('mouseleave', function() {
+        this.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg)';
+    });
+</script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,17 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  task:
+    execution:
+      pool:
+        core-size: 8
+        max-size: 20
+        keep-alive: 10s
+        queue-capacity: 50
+      thread-name-prefix: prod-
+  datasource:
+    url: 'jdbc:postgresql://localhost:5432/postgres'
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
