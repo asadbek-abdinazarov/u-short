@@ -1,5 +1,7 @@
 # U-SHORT 🔗
 
+https://u-short-production.up.railway.app
+
 *Choose language*
 
 🇺🇿 [O'zbekcha](docs/README.uz.md)  
