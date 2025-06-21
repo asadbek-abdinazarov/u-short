@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutionException;
 @Controller
 @RequiredArgsConstructor
 public class UrlController {
+
     @Value("${app.base-url}")
     private String baseUrl;
     private final UrlService urlService;
