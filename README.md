@@ -1,6 +1,6 @@
 # U-SHORT 🔗
 
-https://u-short-production.up.railway.app
+http://ushort.javachi.uz/
 
 *Choose language*
 
